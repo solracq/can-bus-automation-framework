@@ -1,4 +1,4 @@
-"""Pytest bootstrap for local src imports."""
+"""Pytest bootstrap for local src imports. To define the root directory of the project and the src directory."""
 
 from __future__ import annotations
 

@@ -1,3 +1,5 @@
+"""Smoke tests for the framework. Test the assert_message_id function."""
+
 from can_framework import assert_message_id
 
 

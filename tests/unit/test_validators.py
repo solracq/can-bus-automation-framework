@@ -1,3 +1,5 @@
+"""Unit tests for the validators module. Test the assert_message_period function."""
+
 import pytest
 
 from can_framework.validators import assert_message_period
