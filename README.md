@@ -40,6 +40,14 @@ Checking the virtual CAN interface is working:
    cansend vcan0 123#DEADBEEF  -> first terminal: vcan0  123   [4]  DE AD BE EF
 If "vcan0" is missing, run : ./scripts/setup_vcan.sh
 
+Simulated ECU Helper:
+For kernel-level tests (SocketCAN + vcan0), a mock ECU helper is implemented as a simulated ECU process/thread that listens/responds on vcan0. This helper consists of the following:
+- opens its own SocketCAN bus on vcan0
+- recv() requests
+- applies a small state machine / handler
+- send() response frames
+This socket CAN uses a kernel CAN stack to test the real timing/loopback/routing behaivor while still controlling ECU logic deterministaclly in Python.
+
 ## Initial folder structure
 
 ```text
@@ -55,14 +63,17 @@ can_messages_automation/
 │   └── can_framework/
 │       ├── __init__.py
 │       ├── bus.py
+│       ├── message.py
+│       ├── simulated_ecu.py
 │       └── validators.py
 ├── tests/
 │   ├── conftest.py
 │   ├── integration/
-│   │   └── test_vcan_loopback.py
+│   |   ├── simple_example.py
+│   │   ├── test_vcan_loopback.py
+|   |   └── test_simulated_ecu_reaction.py
 │   ├── smoke/
 │   │   └── test_framework_smoke.py
-|   |   ├── simple_example.py
 │   └── unit/
 │       └── test_validators.py
 ├── pytest.ini
@@ -88,6 +99,12 @@ pytest
 ```bash
 ./scripts/setup_vcan.sh
 RUN_VCAN_TESTS=1 pytest -m integration
+```
+4. Run integration tests
+
+```bash
+RUN_VCAN_TESTS=1 python3 -m pytest -q tests/integration/test_vcan_loopback.py
+RUN_VCAN_TESTS=1 python3 -m pytest -q tests/integration/test_simulated_ecu_reaction.py
 ```
 
 ## AI Assistance Disclosure
