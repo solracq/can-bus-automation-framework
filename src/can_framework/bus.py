@@ -19,6 +19,7 @@ def open_bus(channel: str = "vcan0", interface: str = "socketcan", receive_own_m
     Raises:
         RuntimeError: If python-can is not installed.
     """
+    logger.info(f"Opening CAN bus: {channel}, {interface}, {receive_own_messages}")
     if can is None:  # pragma: no cover - import guard
         raise RuntimeError("python-can is not installed. Install dependencies first.")
 
@@ -30,9 +31,10 @@ def open_bus(channel: str = "vcan0", interface: str = "socketcan", receive_own_m
 
 def close_bus(bus: Any) -> None:
     """Close a CAN bus."""
+    logger.info(f"Closing CAN bus: {bus}")
     try:
         bus.shutdown()
         logger.info(f"Closed CAN bus: {bus}")
     except Exception as exc:
         logger.error(f"Error closing CAN bus: {exc}")
-        raise
+        raise RuntimeError(f"Error closing CAN bus: {exc}")
