@@ -1,5 +1,5 @@
 # can-bus-automation-framework
-Simple automation framework to validate Controller Area Network (CAN) messages.
+Automation framework for validating CAN (Controller Area Network) bus message flows and controller-level communication scenarios.
 
 A Controller Area Network (CAN) is the nervous system inside vehicles. Every ECU (Electronic Control Unit)—brake module, infotainment, etc.—broadcasts short messages over a shared bus.
 Testing CAN messages means verifying that message communication is correct, reliable, and safe.
