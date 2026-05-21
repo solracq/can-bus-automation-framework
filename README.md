@@ -1,4 +1,4 @@
-# can_messages_automation
+# can-bus-automation-framework
 Simple automation framework to validate Contorller Area Network (CAN messages)
 
 A Controller Area Network (CAN) is the nervous system inside vehicles. Every ECU (Electronic Control Unit), brake module, infotainment, etc broadcasts short messages overa a shared bus. 
@@ -51,7 +51,7 @@ This socket CAN uses a kernel CAN stack to test the real timing/loopback/routing
 ## Initial folder structure
 
 ```text
-can_messages_automation/
+can-bus-automation-framework/
 ├── configs/
 │   └── test_environment.example.json
 ├── dbc/
