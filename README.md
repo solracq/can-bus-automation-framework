@@ -23,13 +23,10 @@ Python tools:
 - python-can (CAN interaction in Python)
 - cantools (decoding/encoding CAN messages based on DBC files)
 - pytest
-- SocketCAN (creates a virtual CAN interface)
-     - sudo modprobe vcan
-     - sudo ip link add dev vcan0 type vcan
-     - sudo ip link set up vcan0
+- SocketCAN on Linux for kernel-level integration tests
 - Simulated ECU or message responder
 
-Checking that the virtual CAN interface is working:
+Checking that the virtual CAN interface is working on Linux:
 1) Confirm the interface exists and is up
    ip -details link show vcan0  -> Look for "state UP" and "link/can"
 2) Confirm CAN type    ->  Look for "vcan" / CAN-specific details
@@ -52,12 +49,18 @@ This SocketCAN setup uses the kernel CAN stack to test real timing/loopback/rout
 
 ```text
 can-bus-automation-framework/
+├── .dockerignore
+├── Dockerfile
+├── Jenkinsfile
 ├── configs/
 │   └── test_environment.example.json
 ├── dbc/
 ├── docs/
 │   └── STEP_BY_STEP.md
 ├── scripts/
+│   ├── docker_entrypoint.sh
+│   ├── run_tests_in_docker.sh
+│   ├── setup_vcan.py
 │   └── setup_vcan.sh
 ├── src/
 │   └── can_framework/
@@ -91,22 +94,85 @@ pip install -r requirements.txt
 2. Run smoke/unit tests:
 
 ```bash
-pytest
+pytest -m "smoke or unit"
 ```
 
-3. (Optional) Set up virtual CAN for integration tests:
+3. Run SocketCAN integration tests natively on Linux:
 
 ```bash
 ./scripts/setup_vcan.sh
 RUN_VCAN_TESTS=1 pytest -m integration
 ```
 
-4. Run integration tests:
+4. Run the same test flows through Docker on any machine (e.g. macOS) with Docker, where tests are run directly on the host OS. For faster setup and easier to debug:
 
 ```bash
-RUN_VCAN_TESTS=1 python3 -m pytest -q tests/integration/test_vcan_loopback.py
-RUN_VCAN_TESTS=1 python3 -m pytest -q tests/integration/test_simulated_ecu_reaction.py
+./scripts/run_tests_in_docker.sh smoke-unit
+./scripts/run_tests_in_docker.sh integration
+./scripts/run_tests_in_docker.sh integration-virtual
+./scripts/run_tests_in_docker.sh all
 ```
+
+5. Run the same flows with Docker Compose, where Docker runs the tests inside the repo's container image. For consistency, portability, and CI-like execution. :
+
+```bash
+docker compose run --build --rm smoke-unit
+docker compose run --build --rm integration
+docker compose run --build --rm integration-virtual
+docker compose run --build --rm integration-privileged
+```
+
+6. Run the integration tests on real Linux machine or a Linux Jenkins agent. For real SocketCAN/vcan integration, where real Linux host or Linux Jenkins agent are needed:
+
+```bash
+./scripts/run_tests_in_docker.sh integration
+```
+
+If NET_ADMIN is not enough on that machine, try:
+```bash
+INTEGRATION_CONTAINER_MODE=privileged ./scripts/run_tests_in_docker.sh integration
+```
+
+**Note:**
+During development run the following:
+```bash
+pytest -m "smoke or unit"
+```
+or
+```bash
+docker compose run --build --rm smoke-unit
+```
+
+## Docker test workflow
+
+The Docker image provides a Linux userspace with `python-can` and a Python-based `vcan0` setup helper via `pyroute2`.
+This makes smoke/unit tests portable across macOS, Windows, and Linux, and it gives integration tests the same runtime shape used by CI.
+
+- `scripts/run_tests_in_docker.sh smoke-unit` runs fast tests without extra container privileges.
+- `scripts/run_tests_in_docker.sh integration` runs the true `SocketCAN` tests in a Linux container with `--cap-add=NET_ADMIN`.
+- `scripts/run_tests_in_docker.sh integration-virtual` runs the same integration test files against `python-can`'s portable `virtual` backend.
+- `docker compose run --build --rm ...` provides the same flows through Compose while rebuilding the image when the repo changes.
+- The `socketcan` integration runner exports `RUN_VCAN_TESTS=1` and provisions `vcan0` inside the container before `pytest` starts.
+
+**Note:**
+* `--cap-add=NET_ADMIN`: is a Docker runtime permission. It gives the container network admin capabilities.
+* `RUN_VCAN_TESTS=1`: is an env variable flag. It means "yes, run the opt-in CAN integration tests". Without this flag, integration tests are skipped and `vcan0` setup is not attempted.
+
+Why this changed:
+- Some Docker Desktop environments fail while unpacking Debian packages during `apt-get install iproute2`.
+- The container no longer needs `apt` for `vcan` setup, which avoids that class of build failure entirely.
+
+Run split approach:
+- Local macOS/Windows development: `smoke-unit` plus `integration-virtual`
+- Linux or Linux-based Jenkins agent: `integration` for true `SocketCAN/vcan`
+
+If Docker runtime reports `Operation not permitted` or `Unknown device type` while creating `vcan0`, the Linux kernel behind Docker does not currently expose `vcan`. In that case:
+
+- switch to `integration-virtual` for local non-Linux development, or
+- retry the integration container with `INTEGRATION_CONTAINER_MODE=privileged ./scripts/run_tests_in_docker.sh integration`, or
+- enable the `vcan` module on the Linux host or Docker Desktop VM, or
+- run the integration stage on a Linux Jenkins agent.
+
 
 ## AI Assistance Disclosure
 
