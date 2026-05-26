@@ -1,0 +1,10 @@
+.git
+.idea
+.pytest_cache
+.venv
+.vscode
+__pycache__/
+*.py[cod]
+canvenv/
+env/
+venv/
