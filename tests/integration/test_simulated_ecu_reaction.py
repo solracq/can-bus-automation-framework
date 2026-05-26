@@ -7,6 +7,10 @@ from can_framework.simulated_ecu import SimulatedECU
 
 pytestmark = pytest.mark.integration
 
+CAN_CHANNEL = os.getenv("CAN_CHANNEL", "vcan0")
+CAN_INTERFACE = os.getenv("CAN_INTERFACE", "socketcan")
+
+
 def test_simulated_ecu_reacts_to_request() -> None:
     """Kernel-level integration test: send request, assert ECU response."""
     if os.getenv("RUN_VCAN_TESTS") != "1":
@@ -15,10 +19,10 @@ def test_simulated_ecu_reacts_to_request() -> None:
     can = pytest.importorskip("can")
 
     try:
-        tester_bus = open_bus(channel="vcan0", interface="socketcan")
-        ecu_bus = open_bus(channel="vcan0", interface="socketcan")
+        tester_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
+        ecu_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
     except OSError as exc:
-        pytest.skip(f"SocketCAN vcan0 not available/up: {exc}")
+        pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
 
     REQ_ID = 0x700
     RESP_ID = 0x701

@@ -7,6 +7,9 @@ from can_framework.message import receive_message, send_message
 
 pytestmark = pytest.mark.integration
 
+CAN_CHANNEL = os.getenv("CAN_CHANNEL", "vcan0")
+CAN_INTERFACE = os.getenv("CAN_INTERFACE", "socketcan")
+
 
 def test_open_vcan_bus() -> None:
     """Opt-in integration test for local vcan setup."""
@@ -17,7 +20,12 @@ def test_open_vcan_bus() -> None:
     can = pytest.importorskip("can")
 
     # Open a CAN bus on vcan0 using socketCAN
-    bus = open_bus(channel="vcan0", interface="socketcan")
+    try:
+        bus = open_bus(
+            channel=CAN_CHANNEL, 
+            interface=CAN_INTERFACE)
+    except OSError as exc:
+        pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
     try:
         assert isinstance(bus, can.BusABC)
     finally:
@@ -33,7 +41,14 @@ def test_send_and_receive_message() -> None:
     can = pytest.importorskip("can")
 
     # Open a CAN bus on vcan0 using socketCAN
-    bus = open_bus(channel="vcan0", interface="socketcan", receive_own_messages=True)
+    try:
+        bus = open_bus(
+            channel=CAN_CHANNEL,
+            interface=CAN_INTERFACE,
+            receive_own_messages=True,
+        )
+    except OSError as exc:
+        pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
     assert bus is not None
     try:
         msg = can.Message(
