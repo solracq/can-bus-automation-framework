@@ -1,0 +1,50 @@
+services:
+  smoke-unit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: can-bus-automation-framework-tests:local
+    working_dir: /workspace
+    command: ["pytest", "-q", "-m", "smoke or unit"]
+    environment:
+      CAN_CHANNEL: ${CAN_CHANNEL:-vcan0}
+      CAN_INTERFACE: ${CAN_INTERFACE:-socketcan}
+
+  integration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: can-bus-automation-framework-tests:local
+    working_dir: /workspace
+    command: ["pytest", "-q", "-m", "integration"]
+    cap_add:
+      - NET_ADMIN
+    environment:
+      RUN_VCAN_TESTS: "1"
+      CAN_CHANNEL: ${CAN_CHANNEL:-vcan0}
+      CAN_INTERFACE: ${CAN_INTERFACE:-socketcan}
+
+  integration-virtual:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: can-bus-automation-framework-tests:local
+    working_dir: /workspace
+    command: ["pytest", "-q", "-m", "integration"]
+    environment:
+      RUN_VCAN_TESTS: "1"
+      CAN_CHANNEL: ${CAN_CHANNEL:-virtual-can}
+      CAN_INTERFACE: virtual
+
+  integration-privileged:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: can-bus-automation-framework-tests:local
+    working_dir: /workspace
+    command: ["pytest", "-q", "-m", "integration"]
+    privileged: true
+    environment:
+      RUN_VCAN_TESTS: "1"
+      CAN_CHANNEL: ${CAN_CHANNEL:-vcan0}
+      CAN_INTERFACE: ${CAN_INTERFACE:-socketcan}
