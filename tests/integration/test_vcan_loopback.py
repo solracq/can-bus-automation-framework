@@ -5,8 +5,9 @@ import pytest
 from can_framework.bus import close_bus, open_bus
 from can_framework.message import receive_message, send_message
 
+pytestmark = pytest.mark.integration
 
-@pytest.mark.integration
+
 def test_open_vcan_bus() -> None:
     """Opt-in integration test for local vcan setup."""
     if os.getenv("RUN_VCAN_TESTS") != "1":
@@ -22,7 +23,7 @@ def test_open_vcan_bus() -> None:
     finally:
         close_bus(bus)
 
-@pytest.mark.integration
+
 def test_send_and_receive_message() -> None:
     """Opt-in integration test for sending and receiving a message on a CAN bus."""
     if os.getenv("RUN_VCAN_TESTS") != "1":

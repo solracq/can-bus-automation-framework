@@ -5,8 +5,8 @@ import pytest
 from can_framework.bus import close_bus, open_bus
 from can_framework.simulated_ecu import SimulatedECU
 
+pytestmark = pytest.mark.integration
 
-@pytest.mark.integration
 def test_simulated_ecu_reacts_to_request() -> None:
     """Kernel-level integration test: send request, assert ECU response."""
     if os.getenv("RUN_VCAN_TESTS") != "1":

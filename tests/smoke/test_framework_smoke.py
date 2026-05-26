@@ -1,7 +1,9 @@
 """Smoke tests for the framework. Test the assert_message_id function."""
+import pytest
 
 from can_framework import assert_message_id
 
+pytestmark = pytest.mark.smoke
 
 class DummyMessage:
     def __init__(self, arbitration_id: int):

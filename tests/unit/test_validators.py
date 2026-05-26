@@ -4,6 +4,7 @@ import pytest
 
 from can_framework.validators import assert_message_period
 
+pytestmark = pytest.mark.unit
 
 def test_assert_message_period_passes_within_tolerance() -> None:
     timestamps = [0.0, 0.100, 0.201, 0.301]
