@@ -7,6 +7,7 @@ __pycache__/
 .venv/
 venv/
 env/
+canvenv/
 
 # Pytest
 .pytest_cache/
