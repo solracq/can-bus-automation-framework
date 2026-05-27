@@ -28,6 +28,7 @@ class SimulatedECU:
     _thread: threading.Thread | None = field(default=None, init=False, repr=False)
 
     def start(self) -> None:
+        logger.info("Starting ECU service")
         if can is None:  # pragma: no cover
             raise RuntimeError("python-can is not installed. Install dependencies first.")
         if self.running:
@@ -37,12 +38,14 @@ class SimulatedECU:
         self._thread.start()
 
     def stop(self) -> None:
+        logger.info("Stopping ECU service")
         self.running = False
         if self._thread is not None:
             self._thread.join(timeout=1.0)
             self._thread = None
 
     def _loop(self) -> None:
+        logger.info("Running ECU service")
         while self.running:
             msg = self.bus.recv(timeout=self.recv_timeout_s)
             if msg is None:

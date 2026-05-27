@@ -1,9 +1,12 @@
 import os
 
+import logging
 import pytest
 
 from can_framework.bus import close_bus, open_bus
 from can_framework.simulated_ecu import SimulatedECU
+
+logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.integration
 
@@ -21,6 +24,7 @@ def test_simulated_ecu_reacts_to_request() -> None:
     try:
         tester_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
         ecu_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
+        logger.debug("Open tester bus '%s' and ECU bus '%s'", tester_bus, ecu_bus)
     except OSError as exc:
         pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
 
@@ -30,6 +34,7 @@ def test_simulated_ecu_reacts_to_request() -> None:
     def on_request(msg: can.Message) -> None:
         # Simple “reaction”: if first byte is 0x01, respond with 0x02.
         if len(msg.data) >= 1 and msg.data[0] == 0x01:
+            logger.debug("Send message, '%s'", msg.data)
             ecu_bus.send(
                 can.Message(
                     arbitration_id=RESP_ID,
@@ -42,6 +47,7 @@ def test_simulated_ecu_reacts_to_request() -> None:
 
     try:
         request = can.Message(arbitration_id=REQ_ID, data=[0x01], is_extended_id=False)
+        logger.debug("Request to be sent, '%s'", request)
 
         if CAN_INTERFACE == "virtual":
             # The portable virtual backend is used on non-Linux hosts; keep the
@@ -57,11 +63,13 @@ def test_simulated_ecu_reacts_to_request() -> None:
             tester_bus.send(request)
 
         received = tester_bus.recv(timeout=1.0)
+        logger.debug("Request received information, '%s'", received)
         assert received is not None, "No ECU response received within 1 second."
         assert received.arbitration_id == RESP_ID
         assert list(received.data) == [0x02]
     finally:
         if ecu is not None:
             ecu.stop()
+        logger.debug("Closing tester bus, '%s' and ecu bus, '%s'", tester_bus, ecu_bus)
         close_bus(tester_bus)
         close_bus(ecu_bus)

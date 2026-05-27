@@ -1,9 +1,12 @@
 import os
 
+import logging
 import pytest
 
 from can_framework.bus import close_bus, open_bus
 from can_framework.message import receive_message, send_message
+
+logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.integration
 
@@ -24,6 +27,7 @@ def test_open_vcan_bus() -> None:
         bus = open_bus(
             channel=CAN_CHANNEL, 
             interface=CAN_INTERFACE)
+        logger.debug("Opened bus '%s'", bus)
     except OSError as exc:
         pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
     try:
@@ -47,6 +51,7 @@ def test_send_and_receive_message() -> None:
             interface=CAN_INTERFACE,
             receive_own_messages=True,
         )
+        logger.debug("Opened bus '%s'", bus)
     except OSError as exc:
         pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
     assert bus is not None
@@ -57,8 +62,10 @@ def test_send_and_receive_message() -> None:
             is_extended_id=False,
         )
 
+        logger.debug("Sending message, '%s' on bus, '%s'", msg, bus)
         send_message(bus, msg)
         received = receive_message(bus, timeout=1.0)
+        logger.debug("Request received information, '%s'", received)
         assert received is not None, "No frame received within 1 second."
 
         assert received.arbitration_id == msg.arbitration_id
