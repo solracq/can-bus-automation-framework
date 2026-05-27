@@ -129,6 +129,10 @@ docker compose build integration-privileged
 docker compose run --rm integration-privileged
 ```
 
+**Note on docker compose execution**
+- Use `integration-virtual` on macOS/Docker Desktop
+- Use `integration` on a real Linux host or Linux Jenkins agent
+
 6. Run the integration tests on real Linux machine or a Linux Jenkins agent. For real SocketCAN/vcan integration, where real Linux host or Linux Jenkins agent are needed:
 
 ```bash
