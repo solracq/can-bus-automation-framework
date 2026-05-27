@@ -45,7 +45,7 @@ For kernel-level tests (SocketCAN + vcan0), a mock ECU helper is implemented as 
 - send() response frames
 This SocketCAN setup uses the kernel CAN stack to test real timing/loopback/routing behavior while still controlling ECU logic deterministically in Python.
 
-## Initial folder structure
+## Folder structure
 
 ```text
 can-bus-automation-framework/
@@ -116,10 +116,17 @@ RUN_VCAN_TESTS=1 pytest -m integration
 5. Run the same flows with Docker Compose, where Docker runs the tests inside the repo's container image. For consistency, portability, and CI-like execution. :
 
 ```bash
-docker compose run --build --rm smoke-unit
-docker compose run --build --rm integration
-docker compose run --build --rm integration-virtual
-docker compose run --build --rm integration-privileged
+docker compose build smoke-unit
+docker compose run --rm smoke-unit
+
+docker compose build integration-virtual
+docker compose run --rm integration-virtual
+
+docker compose build integration
+docker compose run --rm integration
+
+docker compose build integration-privileged
+docker compose run --rm integration-privileged
 ```
 
 6. Run the integration tests on real Linux machine or a Linux Jenkins agent. For real SocketCAN/vcan integration, where real Linux host or Linux Jenkins agent are needed:
@@ -140,7 +147,8 @@ pytest -m "smoke or unit"
 ```
 or
 ```bash
-docker compose run --build --rm smoke-unit
+docker compose build smoke-unit
+docker compose run --rm smoke-unit
 ```
 
 ## Docker test workflow
@@ -151,7 +159,7 @@ This makes smoke/unit tests portable across macOS, Windows, and Linux, and it gi
 - `scripts/run_tests_in_docker.sh smoke-unit` runs fast tests without extra container privileges.
 - `scripts/run_tests_in_docker.sh integration` runs the true `SocketCAN` tests in a Linux container with `--cap-add=NET_ADMIN`.
 - `scripts/run_tests_in_docker.sh integration-virtual` runs the same integration test files against `python-can`'s portable `virtual` backend.
-- `docker compose run --build --rm ...` provides the same flows through Compose while rebuilding the image when the repo changes.
+- `docker compose build ...` followed by `docker compose run --rm ...` is the most version-compatible Compose flow.
 - The `socketcan` integration runner exports `RUN_VCAN_TESTS=1` and provisions `vcan0` inside the container before `pytest` starts.
 
 **Note:**
@@ -165,6 +173,13 @@ Why this changed:
 Run split approach:
 - Local macOS/Windows development: `smoke-unit` plus `integration-virtual`
 - Linux or Linux-based Jenkins agent: `integration` for true `SocketCAN/vcan`
+
+If you are on Docker Desktop for macOS and see:
+- `unknown flag: --build`
+  use `docker compose build <service>` first, then `docker compose run --rm <service>`
+- `Failed to create 'vcan0': (95, 'Operation not supported')`
+  that means Docker Desktop's Linux VM does not expose the `vcan` link type, even with `privileged: true`
+  use `integration-virtual` locally, and reserve `integration` / `integration-privileged` for real Linux hosts or Linux Jenkins agents
 
 If Docker runtime reports `Operation not permitted` or `Unknown device type` while creating `vcan0`, the Linux kernel behind Docker does not currently expose `vcan`. In that case:
 
