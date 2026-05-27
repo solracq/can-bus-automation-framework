@@ -20,7 +20,7 @@ if str(SRC) not in sys.path:
 CURRENT_TEST = "-"
 
 
-class TestContextFilter(logging.Filter):
+class LogContextFilter(logging.Filter):
     """Inject the current pytest test node id into each log record."""
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -85,13 +85,13 @@ def pytest_configure(config: pytest.Config) -> None:
     console = logging.StreamHandler(sys.stdout)
     console.setLevel(console_level)
     console.setFormatter(console_formatter)
-    console.addFilter(TestContextFilter())
+    console.addFilter(LogContextFilter())
     console._can_test_logging = True  # type: ignore[attr-defined]
 
-    file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8")
+    file_handler = logging.FileHandler(log_file, mode="w", encoding="utf-8", delay=True)
     file_handler.setLevel(file_level)
     file_handler.setFormatter(file_formatter)
-    file_handler.addFilter(TestContextFilter())
+    file_handler.addFilter(LogContextFilter())
     file_handler._can_test_logging = True  # type: ignore[attr-defined]
 
     logger.addHandler(console)
@@ -104,14 +104,6 @@ def pytest_configure(config: pytest.Config) -> None:
     # Keep common third-party libraries from flooding CI logs while still preserving
     # useful application-level debug messages in the file log.
     logging.getLogger("urllib3").setLevel(_get_log_level("PYTEST_URLLIB3_LOG_LEVEL", "INFO"))
-
-    logger.info(
-        "Pytest logging configured. console=%s file=%s log_file=%s",
-        logging.getLevelName(console_level),
-        logging.getLevelName(file_level),
-        log_file,
-    )
-
 
 def pytest_unconfigure(config: pytest.Config) -> None:
     """Close file handles and remove test-specific handlers after the run."""
