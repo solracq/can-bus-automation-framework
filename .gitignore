@@ -11,6 +11,7 @@ canvenv/
 
 # Pytest
 .pytest_cache/
+artifacts/
 log/
 tests/logs/
 
