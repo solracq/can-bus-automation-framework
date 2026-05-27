@@ -178,3 +178,12 @@ If Docker runtime reports `Operation not permitted` or `Unknown device type` whi
 
 Parts of this project were developed with AI assistance (OpenAI Codex/LLM tools) for scaffolding, code suggestions, and documentation drafting.
 All generated content was reviewed, tested, and validated by the project maintainer before commit/merge.
+
+## Jenkins
+
+The included `Jenkinsfile` builds the same Docker test image and runs:
+
+1. smoke and unit tests
+2. SocketCAN integration tests with `--cap-add=NET_ADMIN`
+
+That gives local Docker runs and Jenkins the same execution path, which is the key part for portability and repeatability.
