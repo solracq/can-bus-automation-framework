@@ -56,7 +56,10 @@ can-bus-automation-framework/
 │   └── test_environment.example.json
 ├── dbc/
 ├── docs/
-│   └── STEP_BY_STEP.md
+│   ├── Exploratory_Test_CAN_messages.md
+│   ├── STEP_BY_STEP.md
+│   ├── Test_Plan_CAN_messages.md
+│   └── Test_Strategy_CAN_messages.md
 ├── scripts/
 │   ├── docker_entrypoint.sh
 │   ├── run_tests_in_docker.sh
@@ -82,6 +85,13 @@ can-bus-automation-framework/
 ├── pytest.ini
 └── requirements.txt
 ```
+
+## Documentation
+
+- `docs/STEP_BY_STEP.md`: implementation-oriented build notes for the framework evolution.
+- `docs/Test_Plan_CAN_messages.md`: formal test plan covering objectives, scope, resources, coverage, and deliverables.
+- `docs/Test_Strategy_CAN_messages.md`: overall validation approach, test levels, test types, risks, automation, and CI strategy.
+- `docs/Exploratory_Test_CAN_messages.md`: manual exploratory scenarios for local, Docker, Docker Compose, and Linux SocketCAN workflows.
 
 ## Quick start
 
