@@ -11,6 +11,8 @@ canvenv/
 
 # Pytest
 .pytest_cache/
+log/
+tests/logs/
 
 # IDE/editor settings
 .vscode/
