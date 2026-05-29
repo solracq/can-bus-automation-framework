@@ -215,3 +215,11 @@ That gives local Docker runs and Jenkins the same execution path, which is the k
 
 Parts of this project were developed with AI assistance (OpenAI Codex/LLM tools) for scaffolding, code suggestions, and documentation drafting.
 All generated content was reviewed, tested, and validated by the project maintainer before commit/merge.
+
+## Copyright
+
+Copyright (C) 2026 Carlos Alberto Quiroz
+
+All rights reserved.
+
+This repository is published publicly for portfolio review only. Except for viewing and forking as enabled by GitHub platform functionality, no permission is granted to reuse, modify, redistribute, republish, or present this work as your own, in whole or in part, without prior written permission.
