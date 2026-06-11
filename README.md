@@ -107,6 +107,8 @@ pip install -r requirements.txt
 pytest -m "smoke or unit"
 ```
 
+This creates a timestamped structured log under `log/`. By default the file log uses newline-delimited JSON (`.jsonl`) so it stays easy to parse and closer to production-style structured logging.
+
 3. Run SocketCAN integration tests natively on Linux:
 
 ```bash
@@ -164,6 +166,29 @@ or
 docker compose build smoke-unit
 docker compose run --rm smoke-unit
 ```
+
+## Structured Logs
+
+The framework now emits richer test evidence so local runs and CI logs look closer to production:
+
+- each pytest run gets a `run_id`, `vehicle_program`, `environment`, `component`, and CAN interface context
+- CAN bus, transmit, receive, validator, and ECU handler events emit structured `event_type` values
+- file logs default to JSONL so they can be parsed without brittle regexes
+
+Useful environment variables:
+
+- `PYTEST_LOG_FORMAT=json` keeps file logs machine-readable
+- `PYTEST_FILE_LOG_FORMAT=text` switches file logs back to plain text if needed
+- `CAN_VEHICLE_PROGRAM=MY_PROGRAM`
+- `CAN_ENVIRONMENT=hil-bench`
+- `CAN_COMPONENT=body-controller-tests`
+- `CAN_RUN_ID=nightly-20260610-01`
+
+Why this helps:
+
+- structured event names are easier to classify than raw free-text logs
+- consistent CAN fields such as `arbitration_id_hex`, `payload_hex`, and `timeout_s` make prompt building much cleaner
+- the same log format can later be reused for failure analysis work without changing the test framework again
 
 ## Docker test workflow
 
