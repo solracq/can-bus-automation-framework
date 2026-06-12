@@ -47,8 +47,21 @@ def send_message(
     *,
     log_extra: dict[str, Any] | None = None,
 ) -> None:
-    """Send a CAN message."""
+    """Send a CAN message and emit a structured transmit event.
+
+    Args:
+        bus: The CAN bus used to send the frame.
+        message: The frame to transmit.
+        log_extra: Optional structured context appended to the log event.
+            This is mainly useful in integration scenarios where we want the
+            transmit log to carry domain-specific preconditions such as
+            `ignition_status=OFF`, the expected response ID, or the ECU name.
+            Adding that context here keeps the CAN transport log and the test
+            scenario explanation tied together in the same record.
+    """
     log_fields = {"bus": str(bus), **message_to_log_fields(message)}
+    # Allow callers to attach scenario context so the raw CAN log still explains
+    # why the message was sent under a particular precondition.
     if log_extra:
         log_fields.update(log_extra)
     try:
@@ -74,8 +87,20 @@ def receive_message(
     *,
     log_extra: dict[str, Any] | None = None,
 ) -> can.Message | None:
-    """Receive a CAN message."""
+    """Receive a CAN message and emit structured receive or timeout events.
+
+    Args:
+        bus: The CAN bus used to wait for a frame.
+        timeout: Maximum wait time in seconds.
+        log_extra: Optional structured context appended to the log event.
+            This lets a caller preserve scenario details such as expected
+            preconditions or the expected response ID in both successful
+            receive logs and timeout logs. That makes failure investigation
+            easier because the symptom and the scenario context live together.
+    """
     log_fields = {"bus": str(bus), "timeout_s": timeout}
+    # Reuse the same scenario metadata on receive-side logs so a timeout can be
+    # interpreted without reading the test code first.
     if log_extra:
         log_fields.update(log_extra)
     try:
