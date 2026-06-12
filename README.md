@@ -59,7 +59,8 @@ can-bus-automation-framework/
 │   ├── Exploratory_Test_CAN_messages.md
 │   ├── STEP_BY_STEP.md
 │   ├── Test_Plan_CAN_messages.md
-│   └── Test_Strategy_CAN_messages.md
+│   ├── Test_Strategy_CAN_messages.md
+│   └── AI_TRIAGE_FUNDATION_V1.md
 ├── scripts/
 │   ├── docker_entrypoint.sh
 │   ├── run_tests_in_docker.sh
