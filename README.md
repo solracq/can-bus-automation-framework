@@ -93,6 +93,7 @@ can-bus-automation-framework/
 - `docs/Test_Strategy_CAN_messages.md`: overall validation approach, test levels, test types, risks, automation, and CI strategy.
 - `docs/Exploratory_Test_CAN_messages.md`: manual exploratory scenarios for local, Docker, Docker Compose, and Linux SocketCAN workflows.
 - `docs/LOG_READING_GUIDE.md`: short guide for reading the structured CAN failure logs emitted by the tests.
+- `docs/AI_TRIAGE_FOUNDATION_V1.md`: step-by-step design notes for the V1 triage taxonomy and report schema.
 
 ## Quick start
 
