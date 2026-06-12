@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from .observability import build_event_extra, message_to_log_fields
 
@@ -40,12 +41,20 @@ def create_message(arbitration_id: int, data: list[int], is_extended_id: bool = 
         )
         raise
 
-def send_message(bus: can.Bus, message: can.Message) -> None:
+def send_message(
+    bus: can.Bus,
+    message: can.Message,
+    *,
+    log_extra: dict[str, Any] | None = None,
+) -> None:
     """Send a CAN message."""
+    log_fields = {"bus": str(bus), **message_to_log_fields(message)}
+    if log_extra:
+        log_fields.update(log_extra)
     try:
         logger.info(
             "Sending CAN message",
-            extra=build_event_extra("can.tx", bus=str(bus), **message_to_log_fields(message)),
+            extra=build_event_extra("can.tx", **log_fields),
         )
         bus.send(message)
     except Exception as exc:
@@ -53,31 +62,39 @@ def send_message(bus: can.Bus, message: can.Message) -> None:
             "Error sending CAN message",
             extra=build_event_extra(
                 "can.tx.failed",
-                bus=str(bus),
                 error=str(exc),
-                **message_to_log_fields(message),
+                **log_fields,
             ),
         )
         raise
 
-def receive_message(bus: can.Bus, timeout: float = 1.0) -> can.Message | None:
+def receive_message(
+    bus: can.Bus,
+    timeout: float = 1.0,
+    *,
+    log_extra: dict[str, Any] | None = None,
+) -> can.Message | None:
     """Receive a CAN message."""
+    log_fields = {"bus": str(bus), "timeout_s": timeout}
+    if log_extra:
+        log_fields.update(log_extra)
     try:
         received = bus.recv(timeout=timeout)
     except Exception as exc:
         logger.error(
             "Error receiving CAN message",
-            extra=build_event_extra("can.rx.failed", bus=str(bus), timeout_s=timeout, error=str(exc)),
+            extra=build_event_extra("can.rx.failed", error=str(exc), **log_fields),
         )
         raise
     if received is None:
         logger.error(
             "No CAN message received before timeout",
-            extra=build_event_extra("can.rx.timeout", bus=str(bus), timeout_s=timeout),
+            extra=build_event_extra("can.rx.timeout", **log_fields),
         )
         raise RuntimeError("No message received within timeout.")
+    success_fields = {**log_fields, **message_to_log_fields(received)}
     logger.info(
         "Received CAN message",
-        extra=build_event_extra("can.rx", bus=str(bus), timeout_s=timeout, **message_to_log_fields(received)),
+        extra=build_event_extra("can.rx", **success_fields),
     )
     return received

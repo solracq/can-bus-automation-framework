@@ -77,3 +77,31 @@ def test_receive_message_raises_on_timeout(caplog: pytest.LogCaptureFixture) -> 
 
     timeout_event = next(record for record in caplog.records if record.event_type == "can.rx.timeout")
     assert timeout_event.timeout_s == 1.25
+
+
+def test_send_and_receive_message_include_scenario_metadata(caplog: pytest.LogCaptureFixture) -> None:
+    class FakeBus:
+        def send(self, message: FakeMessage) -> None:
+            _ = message
+
+        def recv(self, timeout: float) -> FakeMessage:
+            assert timeout == 0.75
+            return FakeMessage(arbitration_id=0x708, data=[0x50, 0x03], is_extended_id=False)
+
+    caplog.set_level(logging.INFO, logger=message_module.__name__)
+    bus = FakeBus()
+    request = FakeMessage(arbitration_id=0x700, data=[0x10, 0x03], is_extended_id=False)
+    scenario_log_extra = {
+        "scenario": "ignition_precondition_missing",
+        "ecu_name": "CentralGateway",
+        "expected_response_id_hex": "0x708",
+    }
+
+    message_module.send_message(bus, request, log_extra=scenario_log_extra)
+    message_module.receive_message(bus, timeout=0.75, log_extra=scenario_log_extra)
+
+    tx_event = next(record for record in caplog.records if record.event_type == "can.tx")
+    rx_event = next(record for record in caplog.records if record.event_type == "can.rx")
+    assert tx_event.scenario == "ignition_precondition_missing"
+    assert rx_event.ecu_name == "CentralGateway"
+    assert rx_event.expected_response_id_hex == "0x708"
