@@ -10,6 +10,7 @@ import pytest
 from can_framework.bus import close_bus, open_bus
 from can_framework.message import receive_message, send_message
 from can_framework.observability import build_event_extra, format_can_id
+from can_framework.validators import assert_message_id
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +75,78 @@ def test_gateway_times_out_when_ignition_precondition_is_missing() -> None:
         )
 
         receive_message(tester_bus, timeout=0.5, log_extra=scenario_log_extra)
+    finally:
+        close_bus(tester_bus)
+        close_bus(ecu_bus)
+
+
+def test_gateway_returns_unexpected_response_id_after_request() -> None:
+    """Intentional failure: a response arrives, but it comes back on the wrong CAN ID."""
+    if os.getenv("RUN_VCAN_TESTS") != "1":
+        pytest.skip("Set RUN_VCAN_TESTS=1 to run vcan integration tests.")
+    if os.getenv("RUN_FAILURE_SCENARIOS") != "1":
+        pytest.skip("Set RUN_FAILURE_SCENARIOS=1 to run intentional failure scenarios.")
+
+    can = pytest.importorskip("can")
+
+    try:
+        tester_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
+        ecu_bus = open_bus(channel=CAN_CHANNEL, interface=CAN_INTERFACE)
+    except OSError as exc:
+        pytest.skip(f"{CAN_INTERFACE} {CAN_CHANNEL} not available/up: {exc}")
+
+    req_id = 0x700
+    expected_resp_id = 0x708
+    actual_resp_id = 0x709
+    scenario_log_extra = {
+        "scenario": "unexpected_response_id",
+        "ecu_name": "CentralGateway",
+        "network": "BodyCAN",
+        "request_id_hex": format_can_id(req_id),
+        "expected_response_id_hex": format_can_id(expected_resp_id),
+        "actual_response_id_hex": format_can_id(actual_resp_id),
+        "precondition": "session=extended_diagnostic",
+    }
+
+    try:
+        request = can.Message(
+            arbitration_id=req_id,
+            data=[0x02, 0x10, 0x03],
+            is_extended_id=False,
+        )
+
+        logger.info(
+            "Starting unexpected response ID scenario",
+            extra=build_event_extra(
+                "scenario.failure.started",
+                **scenario_log_extra,
+            ),
+        )
+        send_message(tester_bus, request, log_extra=scenario_log_extra)
+
+        incoming = ecu_bus.recv(timeout=1.0)
+        assert incoming is not None, "The simulated ECU never observed the diagnostic request."
+
+        logger.warning(
+            "ECU answered on a legacy response ID",
+            extra=build_event_extra(
+                "ecu.response.unexpected_id",
+                observed_request_id_hex=format_can_id(incoming.arbitration_id),
+                observed_payload_hex=" ".join(f"{byte:02X}" for byte in incoming.data),
+                **scenario_log_extra,
+            ),
+        )
+        ecu_bus.send(
+            can.Message(
+                arbitration_id=actual_resp_id,
+                data=[0x50, 0x03],
+                is_extended_id=False,
+            )
+        )
+
+        received = receive_message(tester_bus, timeout=0.5, log_extra=scenario_log_extra)
+        assert received is not None, "No response was received while validating the wrong-ID scenario."
+        assert_message_id(received, expected_resp_id)
     finally:
         close_bus(tester_bus)
         close_bus(ecu_bus)
