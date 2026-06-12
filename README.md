@@ -92,6 +92,7 @@ can-bus-automation-framework/
 - `docs/Test_Plan_CAN_messages.md`: formal test plan covering objectives, scope, resources, coverage, and deliverables.
 - `docs/Test_Strategy_CAN_messages.md`: overall validation approach, test levels, test types, risks, automation, and CI strategy.
 - `docs/Exploratory_Test_CAN_messages.md`: manual exploratory scenarios for local, Docker, Docker Compose, and Linux SocketCAN workflows.
+- `docs/LOG_READING_GUIDE.md`: short guide for reading the structured CAN failure logs emitted by the tests.
 
 ## Quick start
 
@@ -183,6 +184,13 @@ Useful environment variables:
 - `CAN_ENVIRONMENT=hil-bench`
 - `CAN_COMPONENT=body-controller-tests`
 - `CAN_RUN_ID=nightly-20260610-01`
+
+For intentional learning scenarios that are meant to fail and generate rich logs:
+
+- `RUN_FAILURE_SCENARIOS=1`
+
+The current opt-in failure scenarios live in `tests/integration/test_failure_scenarios.py`.
+They are useful when you want to practice reading timeout and wrong-response logs without changing the normal green test suite.
 
 Why this helps:
 
